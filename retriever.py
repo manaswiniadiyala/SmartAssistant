@@ -66,15 +66,17 @@ Answer:"""
 
 def answer(query):
     chunks, metas, distances = retrieve(query)
+    
     print("QUESTION:", query)
     print("NUMBER OF CHUNKS:", len(chunks))
     print("DISTANCES:", distances)
+
     for i, chunk in enumerate(chunks):
-    print(f"\n--- RETRIEVED CHUNK {i+1} ---")
-    print("DOCUMENT:", metas[i])
-    print("DISTANCE:", distances[i])
-    print("TEXT:", chunk[:1000])
-    print("METADATA:", metas)
+        print(f"\n--- RETRIEVED CHUNK {i+1} ---")
+        print("DOCUMENT:", metas[i])
+        print("DISTANCE:", distances[i])
+        print("TEXT:", chunk[:1000])
+
     
 
     if not chunks:
