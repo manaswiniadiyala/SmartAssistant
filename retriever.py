@@ -1,3 +1,4 @@
+
 import chromadb
 from sentence_transformers import SentenceTransformer
 from groq import Groq
@@ -9,44 +10,68 @@ load_dotenv()
 EMBED_MODEL = "all-MiniLM-L6-v2"
 CHROMA_PATH = "./chroma_db"
 TOP_K = 3
-MIN_DISTANCE = 2.0        # ← raised very high so nothing gets blocked
+MIN_DISTANCE = 2.0
 
+# Load embedding model
 _model = SentenceTransformer(EMBED_MODEL)
+
+# Connect to ChromaDB
 _client = chromadb.PersistentClient(path=CHROMA_PATH)
 _collection = _client.get_collection("college_docs")
+
+# Initialize Groq
 _groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 
 def retrieve(query):
     query_embed = _model.encode([query]).tolist()
+
     results = _collection.query(
         query_embeddings=query_embed,
         n_results=TOP_K,
         include=["documents", "metadatas", "distances"]
     )
+
     chunks = results["documents"][0]
     metas = results["metadatas"][0]
     distances = results["distances"][0]
+
     return chunks, metas, distances
+
 
 def build_prompt(query, chunks, metas):
     context_parts = []
+
     for chunk, meta in zip(chunks, metas):
         context_parts.append(
             f"[Source: {meta['doc_name']}, Page {meta['page']}]\n{chunk}"
         )
+
     context = "\n\n".join(context_parts)
+
     return f"""You are a helpful FAQ assistant for a college.
-Answer ONLY from the context below. If the context does not contain the answer, say:
+
+Answer ONLY from the context below.
+If the context does not contain the answer, say:
 "I don't have enough information in the college documents to answer that."
 
 Context:
 {context}
 
 Question: {query}
+
 Answer:"""
+
 
 def answer(query):
     chunks, metas, distances = retrieve(query)
+
+    if not chunks:
+        return {
+            "answer": "No relevant information was found in the college documents.",
+            "sources": [],
+            "confidence": "low"
+        }
 
     best_distance = distances[0] if distances else 1.0
     low_confidence = best_distance > MIN_DISTANCE
@@ -59,20 +84,25 @@ def answer(query):
         }
 
     prompt = build_prompt(query, chunks, metas)
-    
-chat = _groq.chat.completions.create(
-    model="openai/gpt-oss-120b",
-    messages=[{"role": "user", "content": prompt}],
-    temperature=0.2,
-    max_tokens=512
 
-
+    # Generate answer using Groq
+    chat = _groq.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        max_completion_tokens=512
     )
+
     llm_answer = chat.choices[0].message.content.strip()
 
-    seen, sources = set(), []
+    # Collect source citations
+    seen = set()
+    sources = []
+
     for meta in metas:
         key = (meta["doc_name"], meta["page"])
+
         if key not in seen:
             seen.add(key)
             sources.append(meta)
