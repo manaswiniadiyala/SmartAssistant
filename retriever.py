@@ -18,6 +18,7 @@ _model = SentenceTransformer(EMBED_MODEL)
 # Connect to ChromaDB
 _client = chromadb.PersistentClient(path=CHROMA_PATH)
 _collection = _client.get_collection("college_docs")
+print("TOTAL DOCUMENTS IN DATABASE:", _collection.count())
 
 # Initialize Groq
 _groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -65,10 +66,12 @@ Answer:"""
 
 def answer(query):
     chunks, metas, distances = retrieve(query)
-    print("QUERY:", query)
-    print("RETRIEVED CHUNKS:", len(chunks))
+    print("QUESTION:", query)
+    print("NUMBER OF CHUNKS:", len(chunks))
     print("DISTANCES:", distances)
+    print("SAMPLE RETRIEVED TEXT:", chunks[0][:500] if chunks else "NO DATA")
     print("METADATA:", metas)
+    
 
     if not chunks:
         return {
