@@ -19,6 +19,10 @@ _model = SentenceTransformer(EMBED_MODEL)
 _client = chromadb.PersistentClient(path=CHROMA_PATH)
 _collection = _client.get_collection("college_docs")
 print("TOTAL DOCUMENTS IN DATABASE:", _collection.count())
+all_data = _collection.get(include=["metadatas"])
+
+print("INDEXED PDF FILES:")
+print(set(meta["doc_name"] for meta in all_data["metadatas"]))
 
 # Initialize Groq
 _groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
