@@ -65,7 +65,7 @@ Answer:"""
 
 def answer(query):
     chunks, metas, distances = retrieve(query)
-        print("QUERY:", query)
+    print("QUERY:", query)
     print("RETRIEVED CHUNKS:", len(chunks))
     print("DISTANCES:", distances)
     print("METADATA:", metas)
