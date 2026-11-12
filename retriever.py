@@ -66,7 +66,7 @@ Answer:"""
 
 def answer(query):
     chunks, metas, distances = retrieve(query)
-    
+
     print("QUESTION:", query)
     print("NUMBER OF CHUNKS:", len(chunks))
     print("DISTANCES:", distances)
@@ -76,8 +76,6 @@ def answer(query):
         print("DOCUMENT:", metas[i])
         print("DISTANCE:", distances[i])
         print("TEXT:", chunk[:1000])
-
-    
 
     if not chunks:
         return {
@@ -98,7 +96,6 @@ def answer(query):
 
     prompt = build_prompt(query, chunks, metas)
 
-    # Generate answer using Groq
     chat = _groq.chat.completions.create(
         model="openai/gpt-oss-120b",
         messages=[
@@ -109,7 +106,6 @@ def answer(query):
 
     llm_answer = chat.choices[0].message.content.strip()
 
-    # Collect source citations
     seen = set()
     sources = []
 
