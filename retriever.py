@@ -59,12 +59,14 @@ def answer(query):
         }
 
     prompt = build_prompt(query, chunks, metas)
-    chat = _groq.chat.completions.create(
-# NEW - current model
-model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-        max_tokens=512
+    
+chat = _groq.chat.completions.create(
+    model="openai/gpt-oss-120b",
+    messages=[{"role": "user", "content": prompt}],
+    temperature=0.2,
+    max_tokens=512
+
+
     )
     llm_answer = chat.choices[0].message.content.strip()
 
